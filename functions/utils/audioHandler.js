@@ -40,8 +40,8 @@ async function transcribeWhatsAppAudio(mediaId) {
 
     const config = {
         encoding: "OGG_OPUS",
-        sampleRateHertz: 48000, // Ajusta si sabes la frecuencia de muestreo, 8000 es común.
-        languageCode: "es-419", // Ejemplo: Español de Latinoamérica
+        sampleRateHertz: 48000,
+        languageCode: "es-419",
         enableAutomaticPunctuation: true,
     };
 
