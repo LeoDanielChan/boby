@@ -7,6 +7,7 @@ const sendWhatsAppMessage = require("./sendMessage.js").sendWhatsAppMessage;
 const getGeminiResponse = require("./geminiResponse.js").getGeminiResponse;
 const createFullPrompt = require("./createPromt.js").createFullPrompt;
 const downloadAndEncodeImage = require("./mediaHandler.js").downloadAndEncodeImage;
+const transcribeWhatsAppAudio = require("./audioHandler.js").transcribeWhatsAppAudio;
 const {initializeApp} = require("firebase-admin/app");
 const {getFirestore} = require("firebase-admin/firestore");
 
@@ -28,6 +29,7 @@ async function handleIncomingMessage(senderId, message, businessPhoneId) {
 
   if (messageType === "text") {
     userPrompt = message.text.body;
+
   } else if (messageType === "image") {
     console.log("Mensaje de imagen recibido:", message);
     const mediaId = message.image.id;
@@ -41,11 +43,23 @@ async function handleIncomingMessage(senderId, message, businessPhoneId) {
         await sendWhatsAppMessage(senderId, responseText, businessPhoneId);
         return;
     }
+
   } else if (messageType === "audio") {
     // Ejemplo: El usuario envía un audio pidiendo un "filtro de aceite".
     // NOTA: Para producción, necesitas un servicio Speech-to-Text (STT) como Google Cloud Speech.
     const mediaId = message.audio.id;
-    userPrompt = `El usuario ha enviado un mensaje de voz (ID: ${mediaId}) con una solicitud de cotización. Usa tu función de búsqueda para identificar el producto y genera una cotización de precios estimados.`;
+    try {
+        const audioText = await transcribeWhatsAppAudio(mediaId);
+
+        userPrompt = `El usuario ha enviado un mensaje de voz que dice: "${audioText}". Usa tu función de búsqueda para identificar el producto y genera una cotización de precios estimados.`;
+
+    } catch (error) {
+        console.error("Fallo crítico al manejar el audio:", error);
+        responseText = "Lo siento, Boby tuvo un problema técnico al transcribir el audio. Por favor, intenta de nuevo o envía un texto.";
+        await sendWhatsAppMessage(senderId, responseText, businessPhoneId);
+        return;
+    }
+
   } else {
     responseText = "Boby solo procesa mensajes de texto, imágenes y audio.";
     await sendWhatsAppMessage(senderId, responseText, businessPhoneId);

@@ -1,17 +1,10 @@
 /* eslint-disable require-jsdoc */
 /* eslint-disable indent */
 /* eslint-disable max-len */
-// functions/index.js
 
-// const functions = require("firebase-functions");
 const {onRequest} = require("firebase-functions/v2/https");
 const {VERIFY_TOKEN} = require("./config.js");
 const handleIncomingMessage = require("./utils/handleMessage.js").handleIncomingMessage;
-// const {initializeApp} = require("firebase-admin/app");
-// const {getFirestore} = require("firebase-admin/firestore");
-//
-// initializeApp();
-// const db = getFirestore(undefined, "boby-store");
 
 exports.whatsappWebhook = onRequest(async (req, res) => {
     if (req.method === "GET") {

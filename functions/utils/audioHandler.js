@@ -16,36 +16,33 @@ async function transcribeWhatsAppAudio(mediaId) {
         "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
     };
 
-    let response = await fetch(mediaDetailsUrl, {
+    let responseAudio = await fetch(mediaDetailsUrl, {
         method: "GET",
         headers: headers,
     });
 
-    if (!response.ok) {
+    if (!responseAudio.ok) {
         throw new Error("Error al obtener detalles del audio de Meta.");
     }
-    const mediaDetails = await response.json();
+    const mediaDetails = await responseAudio.json();
     const audioUrl = mediaDetails.url;
 
-    // Paso 2: Descargar el archivo de audio
-    response = await fetch(audioUrl, {
+    responseAudio = await fetch(audioUrl, {
         method: "GET",
         headers: headers,
     });
 
-    if (!response.ok) {
+    if (!responseAudio.ok) {
         throw new Error("Error descargando el audio.");
     }
 
-    // Obtenemos los datos binarios del audio
-    const audioBuffer = Buffer.from(await response.arrayBuffer());
+    const audioBuffer = Buffer.from(await responseAudio.arrayBuffer());
 
-    // Paso 3: Enviar el audio a Google Cloud Speech-to-Text
     const config = {
-        // WhatsApp/Meta usa OPUS, que se codifica en OGG (audio/ogg)
         encoding: "OGG_OPUS",
-        sampleRateHertz: 16000, // Ajusta si sabes la frecuencia de muestreo, 16000 es común.
+        sampleRateHertz: 48000, // Ajusta si sabes la frecuencia de muestreo, 8000 es común.
         languageCode: "es-419", // Ejemplo: Español de Latinoamérica
+        enableAutomaticPunctuation: true,
     };
 
     const audio = {
@@ -57,12 +54,13 @@ async function transcribeWhatsAppAudio(mediaId) {
         audio: audio,
     };
 
-    console.log("Transcribiendo audio...");
-    const [sttResponse] = await speechClient.recognize(request);
-    const transcription = sttResponse.results
+    const [response] = await speechClient.recognize(request);
+    console.log("Respuesta de STT recibida:", response);
+    const transcription = response.results
         .map(result => result.alternatives[0].transcript)
         .join("\n");
 
+    console.log("Transcripción completada.", transcription);
     if (!transcription) {
         console.warn("STT no pudo transcribir el audio.");
         return "El usuario envió un audio que no pudo ser entendido.";
