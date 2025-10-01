@@ -1,22 +1,32 @@
+/* eslint-disable max-len */
 const GoogleGenAI = require("@google/genai").GoogleGenAI;
-const {GEMINI_API_KEY} = require("../config.js");
+const REGION = "us-central1";
+const PROJECT_ID = process.env.FIREBASE_CONFIG ? JSON.parse(process.env.FIREBASE_CONFIG).projectId : null;
 
-const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY});
+console.log("GCP Project ID:", PROJECT_ID);
+const ai = new GoogleGenAI({
+  vertexai: true,
+  project: PROJECT_ID,
+  location: REGION,
+});
+
+const model = "gemini-2.5-flash";
 
 // eslint-disable-next-line require-jsdoc
 async function getGeminiResponse(fullPrompt) {
+  const contents = fullPrompt;
+
   try {
-    const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: fullPrompt,
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: contents,
     });
 
-    console.log("Respuesta de Gemini:", result.text);
+    const responseText = response.text;
 
-    return result.text.trim();
+    return responseText.trim();
   } catch (error) {
-    console.error("Error al conectar con Gemini:", error);
-    // eslint-disable-next-line max-len
+    console.error("Error al conectar con Gemini (Vertex AI):", error);
     return "Lo siento, hubo un error técnico al buscar los precios. Por favor, intenta de nuevo.";
   }
 }

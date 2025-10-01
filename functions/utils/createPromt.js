@@ -1,16 +1,39 @@
-/** Crea el prompt completo combinando el historial (MCP) y el nuevo mensaje. */
+/* eslint-disable max-len */
+/* eslint-disable require-jsdoc */
+// utils/createPromt.js (Vertex AI Optimized Version)
 
-// eslint-disable-next-line require-jsdoc
-function createFullPrompt(history, newPrompt) {
-  // eslint-disable-next-line max-len
-  let context = "Eres Boby, un agente de IA experto en piezas de vehículos. Tu trabajo es identificar piezas, recomendar productos de mantenimiento y cotizar precios estimados. Siempre usa el historial para recordar el modelo del auto o cotizaciones previas.\n\n";
+function createFullPrompt(history, newPrompt, imagePart = null) {
+  const chatHistoryFormatted = history.map((item) => ({
+    role: item.role === "agent" ? "model" : "user",
+    parts: [{text: item.text}],
+  }));
 
-  history.forEach((item) => {
-    context += `${item.role.toUpperCase()}: ${item.text}\n`;
-  });
+  const systemText =
+    "Eres Boby, un agente de IA experto en piezas de vehículos. " +
+    "Tu trabajo es identificar piezas, recomendar productos de mantenimiento " +
+    "y cotizar precios estimados. Siempre usa el historial para recordar el modelo " +
+    "del auto o cotizaciones previas." +
+    "**IMPORTANTE: Mantén las cotizaciones y explicaciones concisas, con un máximo de 3000 caracteres.**";
 
-  context += `USER: ${newPrompt}\nBOBY (RESPUESTA):`;
-  return context;
+  const userParts = [];
+
+  if (imagePart) {
+    userParts.push({
+      inlineData: {
+        mimeType: imagePart.mimeType,
+        data: imagePart.base64Image,
+      },
+    });
+  }
+
+  userParts.push({text: `${systemText}\n\n${newPrompt}`});
+
+  const newPromptFormatted = {
+    role: "user",
+    parts: userParts,
+  };
+
+  return [...chatHistoryFormatted, newPromptFormatted];
 }
 
 module.exports = {createFullPrompt};
