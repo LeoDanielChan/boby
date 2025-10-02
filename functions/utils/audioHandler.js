@@ -40,7 +40,7 @@ async function transcribeWhatsAppAudio(mediaId) {
 
     const config = {
         encoding: "OGG_OPUS",
-        sampleRateHertz: 48000,
+        sampleRateHertz: 24000,
         languageCode: "es-419",
         enableAutomaticPunctuation: true,
     };

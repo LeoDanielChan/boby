@@ -22,6 +22,7 @@ exports.whatsappWebhook = onRequest(async (req, res) => {
     }
 
     if (req.method === "POST") {
+      res.status(200).send("EVENT_RECEIVED");
       const data = req.body;
       if (data.object === "whatsapp_business_account") {
         try {
@@ -30,16 +31,17 @@ exports.whatsappWebhook = onRequest(async (req, res) => {
               for (const message of change.value.messages || []) {
                 const senderId = message.from;
                 const businessPhoneId = change.value.metadata.phone_number_id;
-
-                await handleIncomingMessage(senderId, message, businessPhoneId);
+                handleIncomingMessage(senderId, message, businessPhoneId)
+                  .catch((error) => {
+                    console.error(`Error procesando mensaje de ${senderId}:`, error);
+                  });
               }
             }
           }
-          return res.status(200).send("EVENT_RECEIVED");
         } catch (error) {
-          console.error("Error procesando el mensaje:", error);
-          return res.status(200).send("EVENT_RECEIVED");
+          console.error("Error al iterar sobre el cuerpo del webhook:", error);
         }
+        return;
       }
     }
 
